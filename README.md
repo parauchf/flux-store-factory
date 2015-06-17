@@ -1,4 +1,7 @@
+[![Build Status](https://circleci.com/gh/parauchf/flux-store-factory.png?circle-token=64964351872b45d2d640f907095ad6b7a2528bf7)](https://circleci.com/gh/parauchf/flux-store-factor/tree/master)
+
 # flux-store-factory
+
 This is a simple module to generate generic flux stores. Someone has probably done this better...  I found myself re-writing the same code for all of my stores so I created this library to keep things DRY.
 
 The pivot method and dispatcher are passed as parameters.  The pivot method is bound to a data access object so that the store's private elements can be accessed through "this."  Specifically, `create` and `destroy` accept an identifier and can create, update or delete objects from the store.
