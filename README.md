@@ -12,11 +12,10 @@ The store exposes two methods to access the data in the store:
 A typical implementation might look something like this:
 
 ```javascript
-dispatcher = new Dispatcher()
 var storeFactory = require('../storeFactory')
 var myDispatcher = require('./path/to/dispatcher')
 
-store = storeFactory({
+module.exports.ThingStore = storeFactory({
 	identifier: 'thing_id',
 	dispatcher: myDispatcher,
 	pivot: function (payload) {
@@ -24,12 +23,12 @@ store = storeFactory({
 			case 'THING_CREATE':
 		    	this.create(payload.thing)
 		    	this.emitChange()
-		    	break;
+		    	break
 
 		    case 'THING_DESTROY':
 		    	this.destroy(payload.thing)
 		    	this.emitChange()
-		    	break;
+		    	break
 		}
 	}
 })
