@@ -10,7 +10,7 @@ The store exposes two methods to access the data in the store:
 
  - `get`: fetches a single object by its identifier (or cid)
 
- - `fetch`: takes a `filter` parameter and a `sort` parameter.  Filter is a hash of conditions that should be met (only equality is supported) and sort is an array of attributes by which to sort.
+ - `query`: takes a `filter` parameter and a `sort` parameter.  Filter is a hash of conditions that should be met (only equality is supported) and sort is an array of attributes by which to sort.
 
 A typical implementation might look something like this:
 
