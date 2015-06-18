@@ -100,7 +100,7 @@ suite('Basic store functionality', function () {
 		assert.deepEqual(names, ['A','D','E','F','M','Z'])
 	})
 
-	test(' should convert cids to ids eventually', function () {
+	test(' should convert cids to ids in the _byId index', function () {
 		var newThing = {name: 'M', group: 'B'}
 		var results
 		
@@ -112,29 +112,51 @@ suite('Basic store functionality', function () {
 		assert.equal(results.length, 1)
 	})
 
-	test(' should handle destroy ', function () {
+	test(' should handle destroy of an unsaved object', function () {
 		var results
 		var names
-		var oldThing
+		var newThing
+
+		testThings.map(actionCreators.createThing)
+		
+		// create a new thing locally		
+		newThing = {name: 'Q', group: 'B'}
+		actionCreators.createThing(newThing)
+		actionCreators.createThing(newThing)
+		results = store.query(null, ['name'])
+		names = results.map(function(r) {return r.name})
+		assert.deepEqual(names, ['A','D','E','F','M','Q','Z'])
+
+		// commit to the server and get an id
+		newThing.thing_id = 98;
+		actionCreators.createThing(newThing)
+		results = store.query(null, ['name'])
+		names = results.map(function(r) {return r.name})
+		assert.deepEqual(names, ['A','D','E','F','M','Q','Z'])
+
+		// now destroy it
+		actionCreators.destroyThing(newThing)
+		results = store.query(null, ['name'])
+		names = results.map(function(r) {return r.name})
+		assert.deepEqual(names, ['A','D','E','F','M','Z'])
+	})
+
+	test(' should handle destroy of a saved object', function () {
+		var results
+		var names
 		var newThing
 
 		testThings.map(actionCreators.createThing)
 
-		oldThing = {thing_id: 34, name: 'R', group: 'B'}
-		actionCreators.createThing(oldThing)
-
+		// create a new thing locally	
 		newThing = {name: 'Q', group: 'B'}
 		actionCreators.createThing(newThing)
-		newThing.thing_id = 98;
-		actionCreators.createThing(newThing)
-
 		results = store.query(null, ['name'])
 		names = results.map(function(r) {return r.name})
-		assert.deepEqual(names, ['A','D','E','F','M','Q','R','Z'])
+		assert.deepEqual(names, ['A','D','E','F','M','Q','Z'])
 
+		// now destroy it before it is comitted
 		actionCreators.destroyThing(newThing)
-		actionCreators.destroyThing(oldThing)
-
 		results = store.query(null, ['name'])
 		names = results.map(function(r) {return r.name})
 		assert.deepEqual(names, ['A','D','E','F','M','Z'])

@@ -52,6 +52,7 @@ var storeFactory = module.exports = function (options) {
     // forget aobut this record
     destroy: function (obj) {
       delete _byId[obj[identifier]]
+      delete _byId[obj.cid]
       delete _byCid[obj.cid]
     },
 
