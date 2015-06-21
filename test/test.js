@@ -20,10 +20,16 @@ var actionCreators = {
 			thing: obj
 		})
 	},
+	purgeThings: function(obj) {
+		dispatcher.dispatch({
+			actionType: 'THING_PURGE',
+			thing: obj
+		})
+	},
 }
 
 
-suite('Basic store functionality', function () {
+suite('Everything', function () {
 	setup(function () {
 		testThings = [
 			{thing_id: 1, name: 'Z', group: 'A'},
@@ -49,6 +55,11 @@ suite('Basic store functionality', function () {
 				    	this.destroy(payload.thing)
 				    	this.emitChange()
 				    	break;
+
+				    case 'THING_PURGE':
+				    	this.purge(payload.thing)
+				    	this.emitChange()
+				    	break;
 				}
 			}
 		})
@@ -59,7 +70,7 @@ suite('Basic store functionality', function () {
 		dispatcher = null
 	})
 
-	test(' should listen to dispatches, add values, and return by id', function () {
+	test('store should listen to dispatches, add values, and return by id', function () {
 		var thing = {
 			thing_id: 1,
 			name: 'It',
@@ -72,7 +83,7 @@ suite('Basic store functionality', function () {
 		assert.deepEqual(store.get(1), thing)
 	})
 
-	test(' should enable query with filter and sort', function () {
+	test('query(): should work with filter and sort', function () {
 
 		testThings.map(actionCreators.createThing)
 
@@ -81,7 +92,7 @@ suite('Basic store functionality', function () {
 		assert.deepEqual(names, ['A','D','F','M'])
 	})
 
-	test(' should enable query with filter but no sort', function () {
+	test('query(): should work with filter but no sort', function () {
 		
 		testThings.map(actionCreators.createThing)
 
@@ -89,7 +100,7 @@ suite('Basic store functionality', function () {
 		assert.deepEqual(results.length, 2)
 	})
 
-	test(' should enable query with sort but no filter', function () {
+	test('query(): should work with sort but no filter', function () {
 		var names
 		var results 
 
@@ -100,7 +111,7 @@ suite('Basic store functionality', function () {
 		assert.deepEqual(names, ['A','D','E','F','M','Z'])
 	})
 
-	test(' should convert cids to ids in the _byId index', function () {
+	test('create(): should convert cids to ids in the _byId index', function () {
 		var newThing = {name: 'M', group: 'B'}
 		var results
 		
@@ -112,7 +123,7 @@ suite('Basic store functionality', function () {
 		assert.equal(results.length, 1)
 	})
 
-	test(' should handle destroy of an unsaved object', function () {
+	test('destroy(): should forget an unsaved object', function () {
 		var results
 		var names
 		var newThing
@@ -141,7 +152,7 @@ suite('Basic store functionality', function () {
 		assert.deepEqual(names, ['A','D','E','F','M','Z'])
 	})
 
-	test(' should handle destroy of a saved object', function () {
+	test('destroy(): should forget a saved object', function () {
 		var results
 		var names
 		var newThing
@@ -160,6 +171,20 @@ suite('Basic store functionality', function () {
 		results = store.query(null, ['name'])
 		names = results.map(function(r) {return r.name})
 		assert.deepEqual(names, ['A','D','E','F','M','Z'])
+	})
+
+	test('purge(): should destroy all objects matching selector', function () {
+		var results
+		var names
+		var newThing
+
+		testThings.map(actionCreators.createThing)
+
+		actionCreators.purgeThings({group: 'B'})
+		results = store.query(null, ['name'])
+		names = results.map(function(r) {return r.name})
+		assert.deepEqual(names, ['E','Z'])	
+
 	})
 
 })

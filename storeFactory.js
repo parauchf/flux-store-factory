@@ -6,6 +6,7 @@ var and = function (a, b) {
   return a && b
 }
 
+// utility to get values of an associative array
 var vals = function (obj) {
   return Object.keys(obj).map(function (key) {
     return obj[key]
@@ -47,6 +48,14 @@ var storeFactory = module.exports = function (options) {
       if (obj.cid) {
         _byCid[obj.cid] = obj
       }
+    },
+
+    receive: function (obj) {
+      obj._old = clone(obj)
+    },
+
+    purge: function (obj) {
+      store.query(obj).map(this.destroy)
     },
 
     // forget aobut this record
