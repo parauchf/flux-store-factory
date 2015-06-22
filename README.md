@@ -10,8 +10,8 @@ The store exposes two methods to access the data in the store:
 
  - `get`: fetches a single object by its identifier (or cid)
 
- - `query`: takes a `filter` parameter and a `sort` parameter.  Filter is a hash of conditions that should be met (only equality is supported) and sort is an array of attributes by which to sort.
-
+ - `query`: takes a `filter` parameter and a `sort` parameter.  Filter is an associative array of conditions that should be met and sort is an array of attributes by which to sort.  Filters may be specified as equality (by default) or may use other comparators with the form {attribute: lt.5} where `lt` specifies the comparator and 5 parameterizes the filter.  For now, the following operands are supported: `eq`, `gt`, `lt`, `lte`, `gte`, `neq`, `startswith`, `contains`.
+ 
 A typical implementation might look something like this:
 
 ```javascript

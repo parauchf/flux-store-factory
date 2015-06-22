@@ -83,12 +83,49 @@ var storeFactory = module.exports = function (options) {
     // @param filter: a dictionary of qualifiers to filter with
     // @param sort: a list of columns to sort by -- ascending only for now!
     query: function (filter, sort) {
+      var rx = /^((eq|gt|lt|gte|lte|neq|contains|startswith)\.)?(.+)$/i
+
       sort = sort || [identifier]
       if (!(sort instanceof Array)) sort = [sort]
       return vals(_byId).filter(function (obj) {
-        if (filter) return Object.keys(filter).map(function (f) {
-          return obj[f] === filter[f]
-        }).reduce(and)
+        if (filter) return Object.keys(filter).map(function (key) {
+          var rxResult = rx.exec(filter[key])
+          var comparator = rxResult[2]
+          var ref = rxResult[3]
+          var val = obj[key]
+          
+          switch(comparator) {
+            case 'eq':
+              return val == ref
+              break;
+            case 'gt':
+              return val > ref
+              break;
+            case 'lt':
+              return val < ref
+              break;
+            case 'gte':
+              return val >= ref
+              break;
+            case 'lte':
+              return val <= ref
+              break;
+            case 'neq':
+              return val != ref
+              break;
+            case 'startswith':
+              if (!val) return false;
+              return String(val.toLowerCase()).indexOf(ref) == 0
+              break;
+            case 'contains':
+              if (!val) return false;
+              return String(val.toLowerCase()).indexOf(ref) > 0
+              break;
+            default:
+              return val == ref
+              break;
+          }
+        }).reduce(and, true)
         else return true
       }).sort(function (a, b) {
         for(var i = 0; i <  sort.length; i++) {

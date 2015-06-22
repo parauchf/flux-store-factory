@@ -29,14 +29,14 @@ var actionCreators = {
 }
 
 
-suite('Everything', function () {
+suite('store factory', function () {
 	setup(function () {
 		testThings = [
-			{thing_id: 1, name: 'Z', group: 'A'},
-			{thing_id: 2, name: 'D', group: 'B'},
-			{thing_id: 3, name: 'E', group: 'A'},
-			{thing_id: 4, name: 'A', group: 'B'},
-			{thing_id: 5, name: 'F', group: 'B'},
+			{thing_id: 1, name: 'Z', group: 'A', label: 'Zac'},
+			{thing_id: 2, name: 'D', group: 'B', label: 'David'},
+			{thing_id: 3, name: 'E', group: 'A', label: 'Ethan'},
+			{thing_id: 4, name: 'A', group: 'B', label: 'Alan'},
+			{thing_id: 5, name: 'F', group: 'B', label: 'Frank'},
 			{name: 'M', group: 'B'}
 		]
 
@@ -83,32 +83,51 @@ suite('Everything', function () {
 		assert.deepEqual(store.get(1), thing)
 	})
 
-	test('query(): should work with filter and sort', function () {
+	suite('query()', function () {
+		setup(function () {
+			testThings.map(actionCreators.createThing)
+		})
 
-		testThings.map(actionCreators.createThing)
+		test('should work with filter and sort', function () {
+			var results = store.query({group: 'B'},['name'])
+			var names = results.map(function(r) {return r.name})
+			assert.deepEqual(names, ['A','D','F','M'])
+		})
 
-		var results = store.query({group: 'B'},['name'])
-		var names = results.map(function(r) {return r.name})
-		assert.deepEqual(names, ['A','D','F','M'])
-	})
+		test('should work with filter but no sort', function () {
+			var results = store.query({group: 'A'}, null)
+			assert.deepEqual(results.length, 2)
+		})
 
-	test('query(): should work with filter but no sort', function () {
-		
-		testThings.map(actionCreators.createThing)
+		test('should work with sort but no filter', function () {
+			var results = store.query(null,['name'])
+			var names = results.map(function(r) {return r.name})
+			assert.deepEqual(names, ['A','D','E','F','M','Z'])
+		})
 
-		var results = store.query({group: 'A'}, null)
-		assert.deepEqual(results.length, 2)
-	})
+		test('should work with lte filter', function () {
+			var results = store.query({thing_id: 'lte.3'}, 'name')
+			var names = results.map(function(r) {return r.name})
+			assert.deepEqual(names, ['D','E','Z'])
+		})
 
-	test('query(): should work with sort but no filter', function () {
-		var names
-		var results 
+		test('should work with gt filter with float typecast', function () {
+			var results = store.query({thing_id: 'gt.3'}, 'name')
+			var names = results.map(function(r) {return r.name})
+			assert.deepEqual(names, ['A','F'])
+		})
 
-		testThings.map(actionCreators.createThing)
+		test('should work with contains filter', function () {
+			var results = store.query({label: 'contains.n'}, 'name')
+			var names = results.map(function(r) {return r.name})
+			assert.deepEqual(names, ['A','E','F'])
+		})
 
-		results = store.query(null,['name'])
-		names = results.map(function(r) {return r.name})
-		assert.deepEqual(names, ['A','D','E','F','M','Z'])
+		test('should work with startswith filter', function () {
+			var results = store.query({label: 'startswith.d'}, 'name')
+			var names = results.map(function(r) {return r.name})
+			assert.deepEqual(names, ['D'])
+		})
 	})
 
 	test('create(): should convert cids to ids in the _byId index', function () {
@@ -123,54 +142,57 @@ suite('Everything', function () {
 		assert.equal(results.length, 1)
 	})
 
-	test('destroy(): should forget an unsaved object', function () {
-		var results
-		var names
-		var newThing
 
-		testThings.map(actionCreators.createThing)
-		
-		// create a new thing locally		
-		newThing = {name: 'Q', group: 'B'}
-		actionCreators.createThing(newThing)
-		actionCreators.createThing(newThing)
-		results = store.query(null, ['name'])
-		names = results.map(function(r) {return r.name})
-		assert.deepEqual(names, ['A','D','E','F','M','Q','Z'])
+	suite('destroy()', function () {
+		setup(function () {
+			testThings.map(actionCreators.createThing)
+		})
 
-		// commit to the server and get an id
-		newThing.thing_id = 98;
-		actionCreators.createThing(newThing)
-		results = store.query(null, ['name'])
-		names = results.map(function(r) {return r.name})
-		assert.deepEqual(names, ['A','D','E','F','M','Q','Z'])
+		test('should forget an unsaved object', function () {
+			var results
+			var names
+			var newThing
+			
+			// create a new thing locally		
+			newThing = {name: 'Q', group: 'B'}
+			actionCreators.createThing(newThing)
+			actionCreators.createThing(newThing)
+			results = store.query(null, ['name'])
+			names = results.map(function(r) {return r.name})
+			assert.deepEqual(names, ['A','D','E','F','M','Q','Z'])
 
-		// now destroy it
-		actionCreators.destroyThing(newThing)
-		results = store.query(null, ['name'])
-		names = results.map(function(r) {return r.name})
-		assert.deepEqual(names, ['A','D','E','F','M','Z'])
-	})
+			// commit to the server and get an id
+			newThing.thing_id = 98;
+			actionCreators.createThing(newThing)
+			results = store.query(null, ['name'])
+			names = results.map(function(r) {return r.name})
+			assert.deepEqual(names, ['A','D','E','F','M','Q','Z'])
 
-	test('destroy(): should forget a saved object', function () {
-		var results
-		var names
-		var newThing
+			// now destroy it
+			actionCreators.destroyThing(newThing)
+			results = store.query(null, ['name'])
+			names = results.map(function(r) {return r.name})
+			assert.deepEqual(names, ['A','D','E','F','M','Z'])
+		})
 
-		testThings.map(actionCreators.createThing)
+		test('should forget a saved object', function () {
+			var results
+			var names
+			var newThing
 
-		// create a new thing locally	
-		newThing = {name: 'Q', group: 'B'}
-		actionCreators.createThing(newThing)
-		results = store.query(null, ['name'])
-		names = results.map(function(r) {return r.name})
-		assert.deepEqual(names, ['A','D','E','F','M','Q','Z'])
+			// create a new thing locally	
+			newThing = {name: 'Q', group: 'B'}
+			actionCreators.createThing(newThing)
+			results = store.query(null, ['name'])
+			names = results.map(function(r) {return r.name})
+			assert.deepEqual(names, ['A','D','E','F','M','Q','Z'])
 
-		// now destroy it before it is comitted
-		actionCreators.destroyThing(newThing)
-		results = store.query(null, ['name'])
-		names = results.map(function(r) {return r.name})
-		assert.deepEqual(names, ['A','D','E','F','M','Z'])
+			// now destroy it before it is comitted
+			actionCreators.destroyThing(newThing)
+			results = store.query(null, ['name'])
+			names = results.map(function(r) {return r.name})
+			assert.deepEqual(names, ['A','D','E','F','M','Z'])
+		})
 	})
 
 	test('purge(): should destroy all objects matching selector', function () {

@@ -1,7 +1,12 @@
 {
   "name": "flux-store-factory",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "description": "",
+  "license": "MIT",
+  "repository": { 
+    "type" : "git",
+    "url" : "https://github.com/parauchf/flux-store-factory"
+  },
   "main": "storeFactory.js",
   "scripts": {
     "test": "mocha"
@@ -13,6 +18,7 @@
   "dependencies": {
     "object-assign": "*",
     "mocha": "*",
-    "flux": "*"
+    "flux": "*",
+    "babel": "*"
   }
 }
