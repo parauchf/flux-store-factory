@@ -145,11 +145,17 @@ var storeFactory = module.exports = function (options) {
       this.removeListener('CHANGE_EVENT', callback)
     },
 
-    dispatchToken: options.dispatcher.register (
-        options.pivot.bind(dao)
-    )
+    unregister: function () {
+      options.dispatcher.unregister(this.dispatchToken)
+    },
 
-  })
+    register: function () {
+      this.dispatchToken = options.dispatcher.register(options.pivot.bind(dao))
+    }
+
+  });
+
+  store.register()
   
   return store
 }

@@ -200,19 +200,60 @@ suite('store factory', function () {
 			assert.deepEqual(names, ['A','D','E','F','M','Z'])
 		})
 	})
+	suite('purge()', function () {
+		test('should destroy all objects matching selector', function () {
+			var results
+			var names
+			var newThing
 
-	test('purge(): should destroy all objects matching selector', function () {
-		var results
-		var names
-		var newThing
+			testThings.map(actionCreators.createThing)
 
-		testThings.map(actionCreators.createThing)
+			actionCreators.purgeThings({group: 'B'})
+			results = store.query(null, ['name'])
+			names = results.map(function(r) {return r.name})
+			assert.deepEqual(names, ['E','Z'])	
 
-		actionCreators.purgeThings({group: 'B'})
-		results = store.query(null, ['name'])
-		names = results.map(function(r) {return r.name})
-		assert.deepEqual(names, ['E','Z'])	
+		})	
+	})
+	
+	suite('unregister()', function () {
+		setup(function () {
+			testThings.map(actionCreators.createThing)
+		})
+
+		test('should unregister the store from the dispatcher', function () {
+			var newThing = {name: 'Q', group: 'B'}
+			
+			store.unregister()
+			actionCreators.createThing(newThing)
+			
+			results = store.query(null, ['name'])
+			names = results.map(function(r) {return r.name})
+			assert.deepEqual(names, ['A','D','E','F','M','Z'])
+
+		})
 
 	})
+
+	suite('register()', function () {
+		setup(function () {
+			testThings.map(actionCreators.createThing)
+		})
+
+		test('should re-register the store with the dispatcher', function () {
+			var newThing = {name: 'Q', group: 'B'}
+			
+			store.unregister()
+			store.register()
+			actionCreators.createThing(newThing)
+			
+			results = store.query(null, ['name'])
+			names = results.map(function(r) {return r.name})
+			assert.deepEqual(names, ['A','D','E','F','M','Q','Z'])
+
+		})
+
+	})
+	
 
 })
