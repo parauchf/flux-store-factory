@@ -1,6 +1,6 @@
 {
   "name": "flux-store-factory",
-  "version": "0.0.8",
+  "version": "0.0.9",
   "description": "",
   "license": "MIT",
   "repository": { 
@@ -18,7 +18,6 @@
   "dependencies": {
     "object-assign": "*",
     "mocha": "*",
-    "flux": "*",
-    "babel": "*"
+    "flux": "*"
   }
 }
