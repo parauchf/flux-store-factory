@@ -54,4 +54,5 @@ Then the store can be queried like this:
 ```javascript
 ThingStore.query({parent_id: "5"}) // gets all the records with parent_id equal to 5
 ThingStore.query({price: "lte.5.0"}) // gets all the records with price <= 5.0
+ThingStore.query({price: "lte.5.0", parent_id: "5"}) // gets all the records with price <= 5.0 AND parent_id equal to 5
 ```
