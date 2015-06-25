@@ -147,9 +147,11 @@ var storeFactory = module.exports = function (options) {
 
     unregister: function () {
       options.dispatcher.unregister(this.dispatchToken)
+      delete this.dispatchToken
     },
 
     register: function () {
+      if (this.dispatchToken) return
       this.dispatchToken = options.dispatcher.register(options.pivot.bind(dao))
     }
 
