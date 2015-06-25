@@ -50,10 +50,6 @@ var storeFactory = module.exports = function (options) {
       }
     },
 
-    receive: function (obj) {
-      obj._old = clone(obj)
-    },
-
     purge: function (obj) {
       store.query(obj).map(this.destroy)
     },

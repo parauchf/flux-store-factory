@@ -111,8 +111,14 @@ suite('store factory', function () {
 			assert.deepEqual(names, ['D','E','Z'])
 		})
 
-		test('should work with gt filter with float typecast', function () {
+		test('should work with gt filter', function () {
 			var results = store.query({thing_id: 'gt.3'}, 'name')
+			var names = results.map(function(r) {return r.name})
+			assert.deepEqual(names, ['A','F'])
+		})
+
+		test('should work with gt filter and float param', function () {
+			var results = store.query({thing_id: 'gt.3.5'}, 'name')
 			var names = results.map(function(r) {return r.name})
 			assert.deepEqual(names, ['A','F'])
 		})
