@@ -1,3 +1,4 @@
+var assign  = require('object-assign')
 var assert = require('assert')
 var storeFactory = require('../storeFactory')
 var Dispatcher = require('flux').Dispatcher
@@ -51,6 +52,13 @@ suite('store factory', function () {
 				    	this.emitChange()
 				    	break;
 
+				    case 'THING_PATCH':
+				    	var thing = this.get(payload.thing.thing_id)
+				    	thing = assign(thing, payload.patch)
+				    	this.create(payload.thing)
+				    	this.emitChange()
+				    	break;
+
 				    case 'THING_DESTROY':
 				    	this.destroy(payload.thing)
 				    	this.emitChange()
@@ -69,19 +77,37 @@ suite('store factory', function () {
 		store = null
 		dispatcher = null
 	})
-
-	test('store should listen to dispatches, add values, and return by id', function () {
-		var thing = {
-			thing_id: 1,
-			name: 'It',
-			age: 25
-		}
-		dispatcher.dispatch({
-			actionType: 'THING_CREATE',
-			thing: thing
+	suite('pivot', function () {
+		test('store should listen to dispatches, add values, and return by id', function () {
+			var thing = {
+				thing_id: 1,
+				name: 'It',
+				age: 25
+			}
+			dispatcher.dispatch({
+				actionType: 'THING_CREATE',
+				thing: thing
+			})
+			assert.deepEqual(store.get(1), thing)
 		})
-		assert.deepEqual(store.get(1), thing)
-	})
+
+		test('pivot methods should be able to use get and query methods', function () {
+			var thing = {
+				thing_id: 1,
+				name: 'It',
+				age: 25
+			}
+			dispatcher.dispatch({
+				actionType: 'THING_CREATE',
+				thing: thing
+			})
+			dispatcher.dispatch({
+				actionType: 'THING_PATCH',
+				thing: thing,
+				patch: {name: 'It 2'}
+			})
+		})
+	});
 
 	suite('query()', function () {
 		setup(function () {

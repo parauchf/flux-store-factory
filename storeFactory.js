@@ -62,13 +62,9 @@ var storeFactory = module.exports = function (options) {
     },
 
     emitChange: function () {
-      store.emitChange()
-    }
+      store.emit('CHANGE_EVENT')
+    },
 
-  }
-
-  store = assign({}, EventEmitter.prototype, {
-  
     // @param id: either an identifier or a cid.  Assuming identifiers are numeric (so they don't start with c)
     get: function (id) {
       return  clone(
@@ -133,9 +129,13 @@ var storeFactory = module.exports = function (options) {
       }).map(clone)
     },
 
-    emitChange: function () {
-      this.emit('CHANGE_EVENT')
-    },
+  }
+
+  store = assign({}, EventEmitter.prototype, {
+
+    get: dao.get,
+
+    query: dao.query,
 
     addChangeListener: function (callback) {
       this.on('CHANGE_EVENT', callback)
