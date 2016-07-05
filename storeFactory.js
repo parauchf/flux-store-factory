@@ -45,20 +45,23 @@ var storeFactory = module.exports = function (options) {
       if (obj.cid) {
         _byCid[obj.cid] = obj
       }
+      store.emit('CREATE_EVENT', obj)
     },
 
     // forget about all records matching this selector
     // @selector: a selector (a dictionary of conditions like used in query) of items
     purge: function (selector) {
-      store.query(selector).map(this.destroy)
+      store.query(selector).map(this.destroy.bind(this))
     },
 
     // forget aobut this record
     // @obj: the object to forget about (i.e. remove from the store)
     destroy: function (obj) {
+      obj = this.get(obj.cid || obj[identifier])
       delete _byId[obj[identifier]]
       delete _byId[obj.cid]
       delete _byCid[obj.cid]
+      store.emit('DESTROY_EVENT', obj)
     },
 
     emitChange: function () {
@@ -143,6 +146,22 @@ var storeFactory = module.exports = function (options) {
 
     removeChangeListener: function (callback) {
       this.removeListener('CHANGE_EVENT', callback)
+    },
+
+    addCreateListener: function (callback) {
+      this.on('CREATE_EVENT', callback)
+    },
+
+    removeCreateListener: function (callback) {
+      this.removeListener('CREATE_EVENT', callback)
+    },
+
+    addDestroyListener: function (callback) {
+      this.on('DESTROY_EVENT', callback)
+    },
+
+    removeDestroyListener: function (callback) {
+      this.removeListener('DESTROY_EVENT', callback)
     },
 
     unregister: function () {

@@ -9,24 +9,24 @@ var dispatcher
 var testThings
 
 var actionCreators = {
-	createThing: function(obj) {
+	createThing: function (obj) {
 		dispatcher.dispatch({
 			actionType: 'THING_CREATE',
 			thing: obj
 		})
 	},
-	destroyThing: function(obj) {
+	destroyThing: function (obj) {
 		dispatcher.dispatch({
 			actionType: 'THING_DESTROY',
 			thing: obj
 		})
 	},
-	purgeThings: function(obj) {
+	purgeThings: function (obj) {
 		dispatcher.dispatch({
 			actionType: 'THING_PURGE',
 			thing: obj
 		})
-	},
+	}
 }
 
 var _guidSeq = 9876543
@@ -244,6 +244,34 @@ suite('store factory', function () {
 			assert.deepEqual(names, ['E','Z'])	
 
 		})	
+	})
+
+	suite('addChangeListener()', function () {
+		test('should add a new change listener', function (done) {
+			store.addChangeListener(done)
+			actionCreators.createThing({name: 'event test'})
+		})
+	})
+
+	suite('addCreateListener()', function () {
+		test('should add a new create listener', function (done) {
+			store.addCreateListener(function (obj) {
+				assert.equal(obj.name, 'create event test')
+				done()
+			})
+			actionCreators.createThing({name: 'create event test'})
+		})
+	})
+
+	suite('addDestroyListener()', function () {
+		test('should add a new destroy listener', function (done) {
+			store.addDestroyListener(function (obj) {
+				assert.equal(obj.name, 'destroy event test')
+				done()
+			})
+			actionCreators.createThing({name: 'destroy event test', thing_id: 105})
+			actionCreators.destroyThing({name: 'red herring', thing_id: 105})
+		})
 	})
 	
 	suite('unregister()', function () {
