@@ -1,10 +1,6 @@
 var assign  = require('object-assign')
 var EventEmitter  = require('events').EventEmitter
 
-// simple utility and-all reducer
-var and = function (a, b) {
-  return a && b
-}
 
 // utility to get values of an associative array
 var vals = function (obj) {
@@ -23,7 +19,6 @@ var clone = function (obj) {
 
 var storeFactory = module.exports = function (options) {
   options = options || {}
-  
   var identifier = options.identifier || 'id'
 
   // internal indexes
@@ -33,6 +28,8 @@ var storeFactory = module.exports = function (options) {
 
   var store
 
+  // data access object--this gets bound to the pivot method as this so that
+  //  these methods can be accessed within the switch statement
   var dao = {
 
     // create (or update)
@@ -42,7 +39,7 @@ var storeFactory = module.exports = function (options) {
         _byId[obj[identifier]] = obj
       } 
       else {
-        if (!obj.cid) obj.cid = ('c' + _sequence++)
+        if (!obj.cid) obj.cid = 'c' + (options.guidGenerator ? options.guidGenerator() : _sequence++)
         _byId[obj.cid] = obj
       }
       if (obj.cid) {
@@ -50,11 +47,14 @@ var storeFactory = module.exports = function (options) {
       }
     },
 
-    purge: function (obj) {
-      store.query(obj).map(this.destroy)
+    // forget about all records matching this selector
+    // @selector: a selector (a dictionary of conditions like used in query) of items
+    purge: function (selector) {
+      store.query(selector).map(this.destroy)
     },
 
     // forget aobut this record
+    // @obj: the object to forget about (i.e. remove from the store)
     destroy: function (obj) {
       delete _byId[obj[identifier]]
       delete _byId[obj.cid]
@@ -80,7 +80,7 @@ var storeFactory = module.exports = function (options) {
       sort = sort || [identifier]
       if (!(sort instanceof Array)) sort = [sort]
       return vals(_byId).filter(function (obj) {
-        if (filter) return Object.keys(filter).map(function (key) {
+        if (filter) return Object.keys(filter).every(function (key) {
           var rxResult = rx.exec(filter[key])
           var comparator = rxResult[2]
           var ref = rxResult[3]
@@ -117,10 +117,10 @@ var storeFactory = module.exports = function (options) {
               return val == ref
               break;
           }
-        }).reduce(and, true)
+        })
         else return true
       }).sort(function (a, b) {
-        for(var i = 0; i <  sort.length; i++) {
+        for (var i = 0; i <  sort.length; i++) {
           var el = sort[i]
           if (a[el] > b[el]) return 1
           else if (a[el] < b[el]) return -1
@@ -157,8 +157,7 @@ var storeFactory = module.exports = function (options) {
 
   });
 
-  store.register()
+  store.register();
   
-  return store
+  return store;
 }
-

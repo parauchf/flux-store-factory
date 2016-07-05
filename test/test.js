@@ -3,10 +3,10 @@ var assert = require('assert')
 var storeFactory = require('../storeFactory')
 var Dispatcher = require('flux').Dispatcher
 
+
 var store
 var dispatcher
-
-var testThings;
+var testThings
 
 var actionCreators = {
 	createThing: function(obj) {
@@ -29,8 +29,40 @@ var actionCreators = {
 	},
 }
 
+var _guidSeq = 9876543
+var getGuid = function () {
+	return _guidSeq++
+}
+
+
+var pivot = function (payload) {
+	switch (payload.actionType) {
+		case 'THING_CREATE':
+	    	this.create(payload.thing)
+	    	this.emitChange()
+	    	break;
+
+	    case 'THING_PATCH':
+	    	var thing = this.get(payload.thing.thing_id)
+	    	thing = assign(thing, payload.patch)
+	    	this.create(payload.thing)
+	    	this.emitChange()
+	    	break;
+
+	    case 'THING_DESTROY':
+	    	this.destroy(payload.thing)
+	    	this.emitChange()
+	    	break;
+
+	    case 'THING_PURGE':
+	    	this.purge(payload.thing)
+	    	this.emitChange()
+	    	break;
+	}
+}
 
 suite('store factory', function () {
+
 	setup(function () {
 		testThings = [
 			{thing_id: 1, name: 'Z', group: 'A', label: 'Zac'},
@@ -45,38 +77,10 @@ suite('store factory', function () {
 		store = storeFactory({
 			identifier: 'thing_id',
 			dispatcher: dispatcher,
-			pivot: function (payload) {
-				switch (payload.actionType) {
-					case 'THING_CREATE':
-				    	this.create(payload.thing)
-				    	this.emitChange()
-				    	break;
-
-				    case 'THING_PATCH':
-				    	var thing = this.get(payload.thing.thing_id)
-				    	thing = assign(thing, payload.patch)
-				    	this.create(payload.thing)
-				    	this.emitChange()
-				    	break;
-
-				    case 'THING_DESTROY':
-				    	this.destroy(payload.thing)
-				    	this.emitChange()
-				    	break;
-
-				    case 'THING_PURGE':
-				    	this.purge(payload.thing)
-				    	this.emitChange()
-				    	break;
-				}
-			}
+			pivot: pivot
 		})
 	})
 	
-	teardown(function () {
-		store = null
-		dispatcher = null
-	})
 	suite('pivot', function () {
 		test('store should listen to dispatches, add values, and return by id', function () {
 			var thing = {
@@ -280,6 +284,38 @@ suite('store factory', function () {
 		})
 
 	})
-	
-
 })
+
+
+
+
+suite('store factory with guid generator', function () {
+	var store
+	var dispatcher
+
+	setup(function () {
+		dispatcher = new Dispatcher()
+		store = storeFactory({
+			identifier: 'thing_id',
+			dispatcher: dispatcher,
+			pivot: pivot,
+			guidGenerator: getGuid
+		})
+	})
+	
+	suite('pivot', function () {
+		test('store should use the guid generator to assign CIDs', function () {
+			var thing = {
+				name: 'It',
+				age: 25
+			}
+			dispatcher.dispatch({
+				actionType: 'THING_CREATE',
+				thing: thing
+			})
+			var thang = store.query()[0]
+			assert.equal(thang.cid, 'c9876543')
+		})
+	})
+})
+
