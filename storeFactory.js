@@ -57,7 +57,8 @@ var storeFactory = module.exports = function (options) {
     // forget aobut this record
     // @obj: the object to forget about (i.e. remove from the store)
     destroy: function (obj) {
-      obj = this.get(obj.cid || obj[identifier])
+      obj = this.get(obj instanceof Object ? (obj.cid || obj[identifier]) : obj)
+      if (!obj) return undefined
       delete _byId[obj[identifier]]
       delete _byId[obj.cid]
       delete _byCid[obj.cid]
