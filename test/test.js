@@ -118,6 +118,12 @@ suite('store factory', function () {
 			testThings.map(actionCreators.createThing)
 		})
 
+		test('should work with filter function and sort spec', function () {
+			var results = store.query(function (obj) {return obj.thing_id % 2 === 1},['name'])
+			var names = results.map(function(r) {return r.name})
+			assert.deepEqual(names, ['E','F','Z'])
+		})
+
 		test('should work with filter and sort', function () {
 			var results = store.query({group: 'B'},['name'])
 			var names = results.map(function(r) {return r.name})

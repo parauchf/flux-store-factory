@@ -17,6 +17,69 @@ var clone = function (obj) {
   )
 }
 
+var _makeSortFunc = function (sortSpec) {
+  return function (a, b) {
+    for (var i = 0; i <  sortSpec.length; i++) {
+      var el = sortSpec[i]
+      if (a[el] > b[el]) return 1
+      else if (a[el] < b[el]) return -1
+    }
+    return 0
+  }
+}
+
+var _makeFilterFunc = function (filterSpec) {
+  var rx = /^((eq|gt|lt|gte|lte|neq|contains|startswith)\.)?(.*)?/i
+  var tests = Object.keys(filterSpec).map(function (key) {
+
+    var rxResult = rx.exec(filterSpec[key])
+    var comparator = rxResult[2]
+    var ref = rxResult[3]
+
+    switch(comparator) {
+      case 'gt':
+        return function (obj) {return obj[key] > ref}
+        break;
+      case 'lt':
+        return function (obj) {return obj[key] < ref}
+        break;
+      case 'gte':
+        return function (obj) {return obj[key] >= ref}
+        break;
+      case 'lte':
+        return function (obj) {return obj[key] <= ref}
+        break;
+      case 'neq':
+        return function (obj) {return obj[key] != ref}
+        break;
+      case 'startswith':
+        return function (obj) {
+          var val = obj[key]
+          if (!val) return false
+          return String(val.toLowerCase()).indexOf(ref) == 0
+        }
+        break;
+      case 'contains':
+        return function (obj) {
+          var val = obj[key]
+          if (!val) return false
+          return String(val.toLowerCase()).indexOf(ref) > 0
+        }
+        break;
+      case 'eq':
+      default:
+        return function (obj) {return obj[key] == ref}
+        break;
+    }
+  })
+  
+  
+
+  return function (obj) {
+    return tests.every(function(test) {return test(obj)})
+  }
+}
+
 var storeFactory = module.exports = function (options) {
   options = options || {}
   var identifier = options.identifier || 'id'
@@ -71,66 +134,22 @@ var storeFactory = module.exports = function (options) {
 
     // @param id: either an identifier or a cid.  Assuming identifiers are numeric (so they don't start with c)
     get: function (id) {
-      return  clone(
-        (/^c\d+/.test(id)) ? _byCid[id] : _byId[id]
-      )
+      return /^c\d+/.test(id) ? _byCid[id] : _byId[id]
     },
 
     // @param filter: a dictionary of qualifiers to filter with
     // @param sort: a list of columns to sort by -- ascending only for now!
     query: function (filter, sort) {
-      var rx = /^((eq|gt|lt|gte|lte|neq|contains|startswith)\.)?(.+)$/i
-
       sort = sort || [identifier]
-      if (!(sort instanceof Array)) sort = [sort]
-      return vals(_byId).filter(function (obj) {
-        if (filter) return Object.keys(filter).every(function (key) {
-          var rxResult = rx.exec(filter[key])
-          var comparator = rxResult[2]
-          var ref = rxResult[3]
-          var val = obj[key]
-          
-          switch(comparator) {
-            case 'eq':
-              return val == ref
-              break;
-            case 'gt':
-              return val > ref
-              break;
-            case 'lt':
-              return val < ref
-              break;
-            case 'gte':
-              return val >= ref
-              break;
-            case 'lte':
-              return val <= ref
-              break;
-            case 'neq':
-              return val != ref
-              break;
-            case 'startswith':
-              if (!val) return false;
-              return String(val.toLowerCase()).indexOf(ref) == 0
-              break;
-            case 'contains':
-              if (!val) return false;
-              return String(val.toLowerCase()).indexOf(ref) > 0
-              break;
-            default:
-              return val == ref
-              break;
-          }
-        })
-        else return true
-      }).sort(function (a, b) {
-        for (var i = 0; i <  sort.length; i++) {
-          var el = sort[i]
-          if (a[el] > b[el]) return 1
-          else if (a[el] < b[el]) return -1
-        }
-        return 0
-      }).map(clone)
+      if (sort instanceof Array) sort = _makeSortFunc(sort)
+      else if (sort instanceof Function) sort = sort
+      else sort = _makeSortFunc([sort])
+
+      if (filter instanceof Function) filter = filter
+      else if (filter instanceof Object) filter = _makeFilterFunc(filter)
+      else if (!filter) filter = function () {return true}
+
+      return vals(_byId).filter(filter).sort(sort)
     },
 
   }
